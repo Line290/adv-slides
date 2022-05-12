@@ -128,30 +128,14 @@
 
 
             <section>
-                <h3>研究意义</h3>
-                <hr>
-                <p style="font-size: 30px;">神经网络的线性特点很容易受到线性扰动的攻击</p>
-                <p style="font-size: 30px;">可靠的人工智能应用场景需要很高的鲁棒性、安全性、可解释和可靠性</p>
-                <aside class="notes">
-                    研究意义
-
-                    读
-                </aside>
-            </section>
-
-
-
-
-
-            <section>
-                <h3>从数学的角度定义对抗训练</h3>
+                <h3>如何制作对抗样本</h3>
                 <hr>
                 <h3 § style="font-size: 30px">
                     \[\begin{aligned}
-                    min_{\theta}\mathbb{E}_{(x,y)∼ D} [max_{\Delta x\in \Omega }L(x+\Delta x,y;\Theta)]
+                    max_{\Delta x\in \Omega }L(x+\Delta x,y;\Theta)
                     \end{aligned} \]
                 </h3>
-                <p  style="font-size: 30px;">输入扰动上进行梯度上升(增大loss)，在参数更新上进行梯度下降(减小loss)</p>
+                <p  style="font-size: 30px;">输入扰动上进行梯度上升(增大loss)</p>
                 <h3 class="fragment" style="font-size: 30px">
                     \[\begin{aligned}
                     \Delta x &= ϵsign(∇_xL(x,y;θ)) \qquad \text{(ICLR2015 FGSM)}\\
@@ -172,15 +156,12 @@
             </section>
 
             <section>
-                <h3>FGM (Fast Gradient Method): ICLR2017</h3>
+                <h3>FGSM (Fast Gradient Sign Method): ICLR2015</h3>
                 <hr>
                 <pre><code data-trim style="max-height: 1003px;width: 900px;">
                     对于每个x:
-                      1.计算x的前向loss、反向传播得到梯度
-                      2.根据embedding矩阵的梯度计算出r，并加到当前embedding上，相当于x+r
-                      3.计算x+r的前向loss，反向传播得到对抗的梯度，累加到(1)的梯度上
-                      4.将embedding恢复为(1)时的值
-                      5.根据(3)的梯度对参数进行更新
+                      1.计算x的前向loss、反向传播得到梯度∇_xL(x,y;θ)
+                      2.根据梯度计算出r=ϵsign(∇_xL(x,y;θ))，并加到当前图片x上，相当于x+r，即得对抗样本
 			</code></pre>
                 <aside class="notes">
                     介绍
@@ -196,7 +177,7 @@
                     对于每个x:
                         1.计算x的前向loss、反向传播得到梯度并备份
                         对于每步t:
-                            2.根据embedding矩阵的梯度计算出r，并加到当前embedding上，相当于x+r(超出范围则投影回epsilon内)
+                            2.根据梯度计算出r=\frac{ϵ}{steps}∇_xL(x,y;θ)，并加到当前图片上x，相当于x' = x+r(超出范围则投影回epsilon内)
                             3.t不是最后一步: 将梯度归0，根据1的x+r计算前后向并得到梯度
                             4.t是最后一步: 恢复(1)的梯度，计算最后的x+r并将梯度累加到(1)上
                         5.将embedding恢复为(1)时的值
@@ -210,6 +191,60 @@
                     **最后更新参数只使用最后一个x+r算出来的梯度**。缺点就是会让训练变慢接近t倍
                 </aside>
             </section>
+
+
+
+            <section>
+                <h3>如何防御对抗样本</h3>
+                <hr>
+                <p style="font-size: 30px;">1. 传统方法将输出图片加上随机变换，消除扰动干扰</p>
+                <p style="font-size: 30px;">2. 对抗训练</p>
+                <aside class="notes">
+                    研究意义
+
+                    读
+                </aside>
+            </section>
+
+
+            <section>
+                <h3>研究意义</h3>
+                <hr>
+                <p style="font-size: 30px;">神经网络的线性特点很容易受到线性扰动的攻击</p>
+                <p style="font-size: 30px;">可靠的人工智能应用场景需要很高的鲁棒性、安全性、可解释和可靠性</p>
+                <aside class="notes">
+                    研究意义
+
+                    读
+                </aside>
+            </section>
+
+            <section>
+                <h3>从数学的角度定义对抗训练</h3>
+                <hr>
+                <h3 § style="font-size: 30px">
+                    \[\begin{aligned}
+                    min_{\theta}\mathbb{E}_{(x,y)∼ D} [max_{\Delta x\in \Omega }L(x+\Delta x,y;\Theta)]
+                    \end{aligned} \]
+                </h3>
+                <p  style="font-size: 30px;">输入扰动上进行梯度上升(增大loss)，在参数更新上进行梯度下降(减小loss)</p>
+                <aside class="notes">
+                    从数学定义角度，定义对抗训练的公式如下
+
+                    解释公式
+
+                    有一个难题是如何获取 delta x
+
+                    sign 正数1负数-1 指的是 针对loss的输入x求偏导，得到梯度方向是正是负 乘以一个系数 得到。这个是GAN之父在ICLR2015论文上提出的 叫FGSM
+
+                    而两年之后，他又提出改进，用sign寻找梯度方向太拘束，我直接求向量全方向上的梯度再乘以一个系数。
+                </aside>
+            </section>
+
+
+
+            
+            
 
 
             <section>
