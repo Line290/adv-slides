@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <title>浅谈对抗训练</title>
+    <title>浅谈对抗样本</title>
 
     <link rel="stylesheet" href="css/reveal.css">
     <link rel="stylesheet" href="css/theme/night.css">
@@ -31,35 +31,33 @@
     <div class="slides">
         <section data-background-transition="zoom">
             <section data-background-transition="zoom">
-                <h2>浅谈对抗训练</h2>
+                <h2>浅谈对抗样本</h2>
                 <hr>
 
                 <p style="position: relative;left: 20%;margin-top: 10%;">林大权</p>
                 <aside class="notes">
                     大家好，我是林大权
 
-                    今天我带来的内容是浅谈对抗训练
+                    今天我分享的内容是浅谈对抗样本
                 </aside>
             </section>
 
 
             <section>
-                <h3>什么是对抗训练</h3>
-                <hr>
-                <p class="fragment" style="font-size: 30px;">生成对抗网络(Generative Adversarial Network,GAN)
-                    代表一大类先进的生成模型。</p>
-                <p class="fragment" style="font-size: 30px;">防御机制：跟对抗攻击、对抗样本相关的领域。(主要关心模型在小扰动下的稳健性)</p>
+                <h3>什么是对抗样本</h3>
+                <img src="https://i.loli.net/2021/04/09/vlPjhFe9CMTAbRu.png" style="width: 1000px;height: 500px;"
+                     width="800px" height="600px">
+
                 <aside class="notes">
-                    提到“对抗”，相信大多数人的第一反应都是CV中的对抗生成网络 (GAN)，殊不知，其实对抗也可以作为一种防御机制，
-                    并且经过简单的修改，便能用在NLP任务上，提高模型的泛化能力。
+                    比如这个实验，针对输入的图像x我们可以识别出他57%是个熊猫
 
-                    深度学习采用对抗的目前有两大类
+                    但是一旦加了一点噪声之后，加完之后的图像我们人眼还是能看出来是个熊猫
 
-                    一类是生成对抗网络
+                    但是我们的模型居然把它识别成了一只长臂猿。
 
-                    一类就是和对抗攻击相关的领域，关心的是模型在扰动下的稳健性
+                    这个加了特殊设计噪声的图片就是对抗样本。
 
-                    我今天也主要是想讲下面这种。欢迎大家一起讨论。
+
                 </aside>
             </section>
 
@@ -92,35 +90,13 @@
                     所以由此引出一系列问题，现在以神经网络为根基的深度学习，在将来落地在人工智能时代其实有很多隐患的。
 
                     现在的神经网络鲁棒性都很差，特别依赖样本来学习。那么我们就需要研究更鲁棒能防御对抗样本攻击的模型。
-
-                    所以对抗训练可以是一种防御手段。那么什么是对抗样本呢？
-                </aside>
-            </section>
-
-            <section>
-                <h3>对抗样本</h3>
-                <img src="https://i.loli.net/2021/04/09/vlPjhFe9CMTAbRu.png" style="width: 1000px;height: 500px;"
-                     width="800px" height="600px">
-
-                <aside class="notes">
-                    比如这个实验，针对输入的图像x我们可以识别出他57%是个熊猫
-
-                    但是一旦加了一点噪声之后，加完之后的图像我们人眼还是能看出来是个熊猫
-
-                    但是我们的模型居然把它识别成了一只长臂猿。
-
-                    这个噪声就是对抗样本。
-
-                    如果在大马路上，一辆无人驾驶汽车被攻击了，那么后果可想而知。
-
-                    所以我认为人类肯定会走进智能时代，而走进去的一个重要指标就是智能技术的算法是具有安全性和鲁棒性的！所以这方面是很有发paper空间的。
                 </aside>
             </section>
 
             <section>
                 <h3>什么样的样本是好的对抗样本？</h3>
                 <hr>
-                <p class="fragment" style="font-size: 30px;">1. 相对于原始输入，所添加的扰动是微小的</p>
+                <p class="fragment" style="font-size: 30px;">1. 相对于原始输入，所添加的扰动是微小的、自然的、融入原始物体的</p>
                 <p class="fragment" style="font-size: 30px;">2. 能使模型犯错。</p>
                 <aside class="notes">
                     那么一个对抗样本要满足什么条件
@@ -128,13 +104,33 @@
                     读
                 </aside>
             </section>
+            
 
+            <section>
+                <h3>对抗样本之扰动贴纸</h3>
+                <img src="https://s2.loli.net/2022/05/13/rvSEteLQpaybiWZ.png" style="width: 1000px;height: 500px;"
+                     width="800px" height="600px">
+
+                <aside class="notes">
+                    对抗扰动贴纸，贴在香蕉图片上，模型将带有扰动贴纸的香蕉识别为烤箱。
+                </aside>
+            </section>
+
+            <section>
+                <h3>对抗样本之3D对抗样本</h3>
+                <img src="https://s2.loli.net/2022/05/13/Xmi7kTxPzJ5oMUN.png" style="width: 1000px;height: 500px;"
+                     width="800px" height="600px">
+
+                <aside class="notes">
+                    根据对抗攻击生成贴图，3D打印出带有特殊纹理的乌龟，识别模型将各个角度的乌龟图片识别为来福枪。
+                </aside>
+            </section>
 
 
             <section>
                 <h3>研究意义</h3>
                 <hr>
-                <p style="font-size: 30px;">神经网络的线性的特点很容易受到线性扰动的攻击</p>
+                <p style="font-size: 30px;">神经网络的线性特点很容易受到线性扰动的攻击</p>
                 <p style="font-size: 30px;">可靠的人工智能应用场景需要很高的鲁棒性、安全性、可解释和可靠性</p>
                 <aside class="notes">
                     研究意义
@@ -189,8 +185,6 @@
                 <aside class="notes">
                     介绍
 
-                    昨天我实验了一下，用这个FGM，在正在举办的机器阅读理解的比赛任务中提升了两个点。后面介绍
-
                     伪代码如下：读
                 </aside>
             </section>
@@ -209,7 +203,7 @@
                         6.根据(4)的梯度对参数进行更新
 			</code></pre>
                 <aside class="notes">
-                    在之后提出了PGD算法，认为FGM通过epsilon参数一下算出对抗扰动可能不是最优的。因此采用PGD进行了改进，多迭代了几次，慢慢找到最优的扰动。这个方法我还在实验中，还没有跑完结果。
+                    在之后提出了PGD算法，认为FGM通过epsilon参数一下算出对抗扰动可能不是最优的。因此采用PGD进行了改进，多迭代了几次，慢慢找到最优的扰动。
 
                     伪代码如下：读
 
@@ -353,10 +347,10 @@
 
         <section data-background-transition="zoom">
             <section data-background-transition="zoom">
-                <h2>我的实验</h2>
+                <h2>联邦学习</h2>
                 <hr>
                 <a href="https://www.biendata.xyz/competition/haihua_2021/leaderboard/" target="_blank">海华阅读理解中文挑战赛</a>
-                <img src="https://i.loli.net/2021/04/10/25OJRhvQPuxrUba.png" style="width: 700px;height: 300px;">
+                <img src="https://s2.loli.net/2022/05/13/Xmi7kTxPzJ5oMUN.png" style="width: 700px;height: 300px;">
             </section>
             <section data-background-transition="zoom">
                 <img src="https://i.loli.net/2021/04/10/8ujGxwd7L9EDZgO.png" style="width: 700px;height: 300px;">
