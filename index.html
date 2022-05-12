@@ -1,0 +1,409 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>浅谈对抗训练</title>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/night.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+    <style>
+        h3 {
+            font-size: 30px;
+        }
+    </style>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section data-background-transition="zoom">
+            <section data-background-transition="zoom">
+                <h2>浅谈对抗训练</h2>
+                <hr>
+
+                <p style="position: relative;left: 20%;margin-top: 10%;">林大权</p>
+                <aside class="notes">
+                    大家好，我是林大权
+
+                    今天我带来的内容是浅谈对抗训练
+                </aside>
+            </section>
+
+
+            <section>
+                <h3>什么是对抗训练</h3>
+                <hr>
+                <p class="fragment" style="font-size: 30px;">生成对抗网络(Generative Adversarial Network,GAN)
+                    代表一大类先进的生成模型。</p>
+                <p class="fragment" style="font-size: 30px;">防御机制：跟对抗攻击、对抗样本相关的领域。(主要关心模型在小扰动下的稳健性)</p>
+                <aside class="notes">
+                    提到“对抗”，相信大多数人的第一反应都是CV中的对抗生成网络 (GAN)，殊不知，其实对抗也可以作为一种防御机制，
+                    并且经过简单的修改，便能用在NLP任务上，提高模型的泛化能力。
+
+                    深度学习采用对抗的目前有两大类
+
+                    一类是生成对抗网络
+
+                    一类就是和对抗攻击相关的领域，关心的是模型在扰动下的稳健性
+
+                    我今天也主要是想讲下面这种。欢迎大家一起讨论。
+                </aside>
+            </section>
+
+            <section>
+                <h3>人工智能——万物互联的时代</h3>
+                <hr>
+                <img src="https://i.loli.net/2021/04/10/6dOH4YZW3yvPgRr.png"
+                     style="width: 1000px;height: 500px;" width="800px" height="600px">
+                <aside class="notes">
+                    我们试想一下，如果将来真的像科幻片一样进入了人工智能万物互联的时代。
+
+                    车都是自动驾驶的，人们都用VR或者AR来看手机。
+
+                    车跟车之间的安全距离都是由人工智能来控制。
+
+                    那么有没有什么隐患？
+                </aside>
+            </section>
+
+            <section>
+                <h3>无人驾驶场景</h3>
+                <hr>
+                <img src="https://i.loli.net/2021/04/09/r9jU1X8g4kHSf7h.png"
+                     style="width: 1000px;height: 500px;" width="800px" height="600px">
+                <aside class="notes">
+                    现在的无人驾驶场景比如这有个指示牌告诉智能车停下的话，学图像处理的人应该明白，我们可以通过cnn对这幅图进行啊目标检测，怎么怎么招，那么神经网络真的就很安全吗？
+
+                    如果被人恶意攻击添加噪声上去，让stop变成其他的怎么办？
+
+                    所以由此引出一系列问题，现在以神经网络为根基的深度学习，在将来落地在人工智能时代其实有很多隐患的。
+
+                    现在的神经网络鲁棒性都很差，特别依赖样本来学习。那么我们就需要研究更鲁棒能防御对抗样本攻击的模型。
+
+                    所以对抗训练可以是一种防御手段。那么什么是对抗样本呢？
+                </aside>
+            </section>
+
+            <section>
+                <h3>对抗样本</h3>
+                <img src="https://i.loli.net/2021/04/09/vlPjhFe9CMTAbRu.png" style="width: 1000px;height: 500px;"
+                     width="800px" height="600px">
+
+                <aside class="notes">
+                    比如这个实验，针对输入的图像x我们可以识别出他57%是个熊猫
+
+                    但是一旦加了一点噪声之后，加完之后的图像我们人眼还是能看出来是个熊猫
+
+                    但是我们的模型居然把它识别成了一只长臂猿。
+
+                    这个噪声就是对抗样本。
+
+                    如果在大马路上，一辆无人驾驶汽车被攻击了，那么后果可想而知。
+
+                    所以我认为人类肯定会走进智能时代，而走进去的一个重要指标就是智能技术的算法是具有安全性和鲁棒性的！所以这方面是很有发paper空间的。
+                </aside>
+            </section>
+
+            <section>
+                <h3>什么样的样本是好的对抗样本？</h3>
+                <hr>
+                <p class="fragment" style="font-size: 30px;">1. 相对于原始输入，所添加的扰动是微小的</p>
+                <p class="fragment" style="font-size: 30px;">2. 能使模型犯错。</p>
+                <aside class="notes">
+                    那么一个对抗样本要满足什么条件
+
+                    读
+                </aside>
+            </section>
+
+
+
+            <section>
+                <h3>研究意义</h3>
+                <hr>
+                <p style="font-size: 30px;">神经网络的线性的特点很容易受到线性扰动的攻击</p>
+                <p style="font-size: 30px;">可靠的人工智能应用场景需要很高的鲁棒性、安全性、可解释和可靠性</p>
+                <aside class="notes">
+                    研究意义
+
+                    读
+                </aside>
+            </section>
+
+
+
+
+
+            <section>
+                <h3>从数学的角度定义对抗训练</h3>
+                <hr>
+                <h3 § style="font-size: 30px">
+                    \[\begin{aligned}
+                    min_{\theta}\mathbb{E}_{(x,y)∼ D} [max_{\Delta x\in \Omega }L(x+\Delta x,y;\Theta)]
+                    \end{aligned} \]
+                </h3>
+                <p  style="font-size: 30px;">输入扰动上进行梯度上升(增大loss)，在参数更新上进行梯度下降(减小loss)</p>
+                <h3 class="fragment" style="font-size: 30px">
+                    \[\begin{aligned}
+                    \Delta x &= ϵsign(∇_xL(x,y;θ)) \qquad \text{(ICLR2015 FGSM)}\\
+                    \Delta x &= ϵ \frac {∇_xL(x,y;θ)}{||∇_xL(x,y;θ)||} \qquad \text{(ICLR2017 FGM)}
+                    \end{aligned} \]
+                </h3>
+                <aside class="notes">
+                    从数学定义角度，定义对抗训练的公式如下
+
+                    解释公式
+
+                    有一个难题是如何获取 delta x
+
+                    sign 正数1负数-1 指的是 针对loss的输入x求偏导，得到梯度方向是正是负 乘以一个系数 得到。这个是GAN之父在ICLR2015论文上提出的 叫FGSM
+
+                    而两年之后，他又提出改进，用sign寻找梯度方向太拘束，我直接求向量全方向上的梯度再乘以一个系数。
+                </aside>
+            </section>
+
+            <section>
+                <h3>FGM (Fast Gradient Method): ICLR2017</h3>
+                <hr>
+                <pre><code data-trim style="max-height: 1003px;width: 900px;">
+                    对于每个x:
+                      1.计算x的前向loss、反向传播得到梯度
+                      2.根据embedding矩阵的梯度计算出r，并加到当前embedding上，相当于x+r
+                      3.计算x+r的前向loss，反向传播得到对抗的梯度，累加到(1)的梯度上
+                      4.将embedding恢复为(1)时的值
+                      5.根据(3)的梯度对参数进行更新
+			</code></pre>
+                <aside class="notes">
+                    介绍
+
+                    昨天我实验了一下，用这个FGM，在正在举办的机器阅读理解的比赛任务中提升了两个点。后面介绍
+
+                    伪代码如下：读
+                </aside>
+            </section>
+
+            <section>
+                <h3>PGD (Projected Gradient Descent): ICLR2018</h3>
+                <hr>
+                <pre><code data-trim style="max-height: 1003px;width: 900px;">
+                    对于每个x:
+                        1.计算x的前向loss、反向传播得到梯度并备份
+                        对于每步t:
+                            2.根据embedding矩阵的梯度计算出r，并加到当前embedding上，相当于x+r(超出范围则投影回epsilon内)
+                            3.t不是最后一步: 将梯度归0，根据1的x+r计算前后向并得到梯度
+                            4.t是最后一步: 恢复(1)的梯度，计算最后的x+r并将梯度累加到(1)上
+                        5.将embedding恢复为(1)时的值
+                        6.根据(4)的梯度对参数进行更新
+			</code></pre>
+                <aside class="notes">
+                    在之后提出了PGD算法，认为FGM通过epsilon参数一下算出对抗扰动可能不是最优的。因此采用PGD进行了改进，多迭代了几次，慢慢找到最优的扰动。这个方法我还在实验中，还没有跑完结果。
+
+                    伪代码如下：读
+
+                    **最后更新参数只使用最后一个x+r算出来的梯度**。缺点就是会让训练变慢接近t倍
+                </aside>
+            </section>
+
+
+            <section>
+                <h3>两个优化方向：<br>得到更优的扰动 & 提升训练速度</h3>
+                <hr>
+                <p style="font-size: 30px;">FreeAT (Free Adversarial Training): NIPS2019</p>
+                <p style="font-size: 30px;">YOPO (You Only Propagate Once): NIPS2019</p>
+                <p style="font-size: 30px;">FreeLB (Free Large-Batch): ICLR2020</p>
+                <aside class="notes">
+                    然后接下来的研究就是围绕得到更优的扰动和提升训练速度
+
+                    FreeAT 和YOPO 没有细看 不过多叙述了
+
+                    FreeLB我看了一下他的论文
+                </aside>
+            </section>
+
+            <section data-background-transition="zoom">
+                <img src="https://i.loli.net/2021/04/10/y8Lez3XOJlmrIda.png" style="width: 10000px;height: 500px;">
+                <aside class="notes">
+                    他在去年的自然语言理解基准榜单上得到了第一名
+
+                    就是用对抗训练的思想。现在排在了第十一是微软研究的。
+
+                    然后在对话阅读理解数据集上也是采用这个对抗思想，能力首次超过人类。是追一科技，论文还没来得及看
+                </aside>
+            </section>
+
+            <section data-background-transition="zoom">
+                <img src="https://i.loli.net/2021/04/10/c9pz4Gml5QJPsDE.png" style="width: 10000px;height: 500px;">
+                <aside class="notes">
+
+                </aside>
+            </section>
+        </section>
+
+
+        <section data-background-transition="zoom">
+            <section data-background-transition="zoom">
+                <h2>NLP 中的对抗训练</h2>
+            </section>
+
+
+            <section data-background-transition="zoom">
+                <h3>NLP的对手</h3>
+                <hr>
+                <p style="font-size: 30px;">1. 黑盒环境下对embedding进行扰动(对手不是从样本进行攻击)</p>
+                <p style="font-size: 30px;">2. 在输入中添加分散注意力的句子(人工)</p>
+                <p style="font-size: 30px;">3. 用GANs将输入投影到潜在空间，并搜索接近原始的文本对手</p>
+                <aside class="notes">
+                    讲一下nlp中的对抗对手
+
+                    读
+                </aside>
+            </section>
+
+
+            <section data-background-transition="zoom">
+                <img src="https://i.loli.net/2021/04/09/daKoDQkv35hwmEP.png" style="width: 700px;height: 300px;">
+                <p style="font-size: 30px;">如何在没有人工评估的情况下通过单词/字符替换来构建保留标签的对抗性示例仍然不清楚，因为每个单词/字符的含义取决于上下文。</p>
+                <p style="font-size: 30px;">基于Embedding的对手严格来说比更传统的基于文本的对手更强大</p>
+                <aside class="notes">
+                    读
+
+                    因为nlp的输入其实就是one-hot向量，如果针对onehot进行扰动，每个扰动的距离恒为根号2 ，也不满足对抗样本的要求，所以基本上都是在embedding层来做扰动的
+                </aside>
+            </section>
+
+
+            <section>
+                <h3>FreeLB Min-Max公式</h3>
+                <hr>
+                <h3 style="font-size: 30px">
+                    \[\begin{aligned}
+                    min_{\theta}\mathbb{E}_{(Z,y)∼ D ,{m∼M }} [\frac {1}{K}\sum_{t=0}^{K-1} max_{\delta_t\in \Omega_t
+                    }L(f_{\theta}(x+\delta_t),y)]
+                    \end{aligned} \]
+                </h3>
+                <pre><code data-trim style="max-height: 1003px;width: 900px;">
+                    对于每个x:
+                      1.通过均匀分布初始化r，梯度g为0
+                      对于每步t=1...K:
+                        2.根据x+r计算前后向，累计梯度g
+                        3.更新r
+                      4.根据g/K更新梯度
+			    </code></pre>
+                <aside class="notes">
+
+                </aside>
+            </section>
+
+            <section>
+                <h3>嵌入训练过程</h3>
+                <hr>
+                <img src="https://i.loli.net/2021/04/10/GLlxoKgC46bPJiF.png" style="width: 1000px;height: 500px;">
+            </section>
+
+            <section>
+                <h3>实验对比</h3>
+                <hr>
+                <img src="https://i.loli.net/2021/04/10/WTh7O4Ui5YenzNM.png" style="width: 700px;height: 300px;">
+                <aside class="notes">
+
+                </aside>
+            </section>
+
+        </section>
+
+
+        <section data-background-transition="zoom">
+            <section data-background-transition="zoom">
+                <h2>GNN 中的对抗攻击</h2>
+                <aside class="notes">
+
+                </aside>
+            </section>
+            <section data-background-transition="zoom">
+                <h2>结构攻击 & 特征攻击</h2>
+                <img src="https://i.loli.net/2021/04/10/euEiCdStPJRWypk.png" style="width: 700px;height: 300px;">
+                <h3 style="font-size: 30px">
+                    \[\begin{aligned}
+                    G(A,X）
+                    \end{aligned} \]
+                </h3>
+                <p class="fragment" style="font-size: 30px;">场景：金融诈骗伪装</p>
+                <aside class="notes">
+                    然后是现在新兴的神经网络主流图神经网络
+
+                    现在用GNN做认知推理是越来越常见的趋势
+
+                    针对非欧空间的离散数据，也是相当容易被攻击的毒害的。
+                </aside>
+            </section>
+        </section>
+
+        <section data-background-transition="zoom">
+            <section data-background-transition="zoom">
+                <h2>我的实验</h2>
+                <hr>
+                <a href="https://www.biendata.xyz/competition/haihua_2021/leaderboard/" target="_blank">海华阅读理解中文挑战赛</a>
+                <img src="https://i.loli.net/2021/04/10/25OJRhvQPuxrUba.png" style="width: 700px;height: 300px;">
+            </section>
+            <section data-background-transition="zoom">
+                <img src="https://i.loli.net/2021/04/10/8ujGxwd7L9EDZgO.png" style="width: 700px;height: 300px;">
+            </section>
+            <aside class="notes">
+
+            </aside>
+        </section>
+
+
+
+        <section data-background-transition="zoom">
+            <h2>Thank you Bye</h2>
+            <a href="https://github.com/Coding-Zuo" target="_blank">Github</a><br>
+            <a href="https://coding-zuo.github.io/" target="_blank">Blog</a>
+            <aside class="notes">
+
+            </aside>
+        </section>
+    </div>
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.js"></script>
+
+<script>
+    // More info about config & dependencies:
+    // - https://github.com/hakimel/reveal.js#configuration
+    // - https://github.com/hakimel/reveal.js#dependencies
+    Reveal.initialize({
+        math: {
+            mathjax: 'plugin/MathJax.js',
+            config: 'TeX-AMS_HTML-full'  // 参考 http://docs.mathjax.org/en/latest/config-files.html
+        },
+        dependencies: [
+            {src: 'plugin/markdown/marked.js'},
+            {src: 'plugin/markdown/markdown.js'},
+            {src: 'plugin/notes/notes.js', async: true},
+            {
+                src: 'plugin/highlight/highlight.js', async: true, callback: function () {
+                    hljs.initHighlightingOnLoad();
+                }
+            },
+            {src: 'plugin/math/math.js', async: true}
+        ]
+
+    });
+</script>
+</body>
+</html>
