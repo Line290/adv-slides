@@ -45,9 +45,9 @@
 
             <section>
                 <h3>什么是对抗样本</h3>
-                <img src="https://i.loli.net/2021/04/09/vlPjhFe9CMTAbRu.png" style="width: 1000px;height: 500px;"
-                     width="800px" height="600px">
-
+                <img src="https://i.loli.net/2021/04/09/vlPjhFe9CMTAbRu.png" style="width: 800px;height: 400px;"
+                     width="640px" height="480px">
+                <p class="fragment" style="font-size: 30px;">精心设计的微小扰动，人眼几乎无法察觉，但是模型会将扰动后的图片识别错</p>
                 <aside class="notes">
                     比如这个实验，针对输入的图像x我们可以识别出他57%是个熊猫
 
@@ -96,8 +96,8 @@
             <section>
                 <h3>什么样的样本是好的对抗样本？</h3>
                 <hr>
-                <p class="fragment" style="font-size: 30px;">1. 相对于原始输入，所添加的扰动是微小的、自然的、融入原始物体的</p>
-                <p class="fragment" style="font-size: 30px;">2. 能使模型犯错。</p>
+                <p class="fragment" style="font-size: 30px;">1. 能使模型识别错误。</p>
+                <p class="fragment" style="font-size: 30px;">2. 相对于原始输入，所添加的扰动是微小的、自然的、融入原始物体的</p>
                 <aside class="notes">
                     那么一个对抗样本要满足什么条件
 
@@ -135,33 +135,25 @@
                     max_{\Delta x\in \Omega }L(x+\Delta x,y;\Theta)
                     \end{aligned} \]
                 </h3>
-                <p  style="font-size: 30px;">输入扰动上进行梯度上升(增大loss)</p>
-                <h3 class="fragment" style="font-size: 30px">
+                <p  style="font-size: 30px;">利用梯度上升给输入图片添加扰动使模型loss增大</p>
+                <!-- <h3 class="fragment" style="font-size: 30px">
                     \[\begin{aligned}
                     \Delta x &= ϵsign(∇_xL(x,y;θ)) \qquad \text{(ICLR2015 FGSM)}\\
                     \Delta x &= ϵ \frac {∇_xL(x,y;θ)}{||∇_xL(x,y;θ)||} \qquad \text{(ICLR2017 FGM)}
                     \end{aligned} \]
-                </h3>
-                <aside class="notes">
-                    从数学定义角度，定义对抗训练的公式如下
-
-                    解释公式
-
-                    有一个难题是如何获取 delta x
-
-                    sign 正数1负数-1 指的是 针对loss的输入x求偏导，得到梯度方向是正是负 乘以一个系数 得到。这个是GAN之父在ICLR2015论文上提出的 叫FGSM
-
-                    而两年之后，他又提出改进，用sign寻找梯度方向太拘束，我直接求向量全方向上的梯度再乘以一个系数。
+                </h3> -->
                 </aside>
             </section>
 
             <section>
-                <h3>FGSM (Fast Gradient Sign Method): ICLR2015</h3>
+                <h3>攻击方法：FGSM (Fast Gradient Sign Method): ICLR2015</h3>
                 <hr>
+                <p  style="font-size: 30px;">单次迭代攻击</p>
                 <pre><code data-trim style="max-height: 1003px;width: 900px;">
                     对于每个x:
-                      1.计算x的前向loss、反向传播得到梯度∇_xL(x,y;θ)
-                      2.根据梯度计算出r=ϵsign(∇_xL(x,y;θ))，并加到当前图片x上，相当于x+r，即得对抗样本
+                      1.计算输入图片x的前向loss、反向传播得到梯度∇_x;
+                      2.根据梯度计算出扰动r=ϵsign(∇_x)，并添加到当前图片x上，
+                        得到对抗样本x'=x+r，其中ϵ为添加的扰动大小，例如8/255。
 			</code></pre>
                 <aside class="notes">
                     介绍
@@ -171,18 +163,21 @@
             </section>
 
             <section>
-                <h3>PGD (Projected Gradient Descent): ICLR2018</h3>
+                <h3>攻击方法：PGD (Projected Gradient Descent): ICLR2018</h3>
                 <hr>
-                <pre><code data-trim style="max-height: 1003px;width: 900px;">
-                    对于每个x:
-                        1.计算x的前向loss、反向传播得到梯度并备份
-                        对于每步t:
-                            2.根据梯度计算出r=\frac{ϵ}{steps}∇_xL(x,y;θ)，并加到当前图片上x，相当于x' = x+r(超出范围则投影回epsilon内)
-                            3.t不是最后一步: 将梯度归0，根据1的x+r计算前后向并得到梯度
-                            4.t是最后一步: 恢复(1)的梯度，计算最后的x+r并将梯度累加到(1)上
-                        5.将embedding恢复为(1)时的值
-                        6.根据(4)的梯度对参数进行更新
-			</code></pre>
+                <p  style="font-size: 30px;">多次迭代攻击</p>
+                <pre>
+                    <code data-trim style="max-height: 1003px;width: 900px;">
+                    对于输入图片x:
+                        1.初始化设置对抗样本x' = x + 随机噪声
+                        for 0 to t:
+                            2.计算x'的前向loss、反向传播得到梯度∇_x'
+                            3.根据梯度计算出扰动r=ϵ/steps*sign(∇_x')，
+                              并添加到当前对抗样本上x'，即x' = x'+r
+                            4.将x'中超出[x-ϵ, x+ϵ]且超出0-255像素值范围的值截断
+                        5.得到最终的对抗样本x'
+			</code>
+        </pre>
                 <aside class="notes">
                     在之后提出了PGD算法，认为FGM通过epsilon参数一下算出对抗扰动可能不是最优的。因此采用PGD进行了改进，多迭代了几次，慢慢找到最优的扰动。
 
@@ -197,7 +192,7 @@
             <section>
                 <h3>如何防御对抗样本</h3>
                 <hr>
-                <p style="font-size: 30px;">1. 传统方法将输出图片加上随机变换，消除扰动干扰</p>
+                <p style="font-size: 30px;">1. 传统方法将输入图片进行预处理，先进行一些随机变换，例如缩放、裁剪、更换压缩率，破坏精心设计的扰动</p>
                 <p style="font-size: 30px;">2. 对抗训练</p>
                 <aside class="notes">
                     研究意义
@@ -206,8 +201,14 @@
                 </aside>
             </section>
 
-
             <section>
+                <h3>1. JPEG去噪</h3>
+                <img src="https://s2.loli.net/2022/05/13/wfoPKlAQG743sbS.png" style="width: 1000px;height: 500px;"
+                     width="800px" height="600px">
+            </section>
+
+
+            <!-- <section>
                 <h3>研究意义</h3>
                 <hr>
                 <p style="font-size: 30px;">神经网络的线性特点很容易受到线性扰动的攻击</p>
@@ -217,17 +218,20 @@
 
                     读
                 </aside>
-            </section>
+            </section> -->
 
             <section>
-                <h3>从数学的角度定义对抗训练</h3>
+                <h3>对抗训练</h3>
                 <hr>
+                <p  style="font-size: 40px;">从数学的角度定义对抗训练</h3>
                 <h3 § style="font-size: 30px">
                     \[\begin{aligned}
                     min_{\theta}\mathbb{E}_{(x,y)∼ D} [max_{\Delta x\in \Omega }L(x+\Delta x,y;\Theta)]
                     \end{aligned} \]
                 </h3>
-                <p  style="font-size: 30px;">输入扰动上进行梯度上升(增大loss)，在参数更新上进行梯度下降(减小loss)</p>
+                <p  style="font-size: 30px;">通过给输入图片添加扰动进行梯度上升(增大loss)，在参数更新上进行梯度下降(减小loss)</p>
+                <img src="https://s2.loli.net/2022/05/13/Ur5JLKD7ATNoEGP.png" style="width: 800px;height: 300px;"
+                     width="600px" height="300px">
                 <aside class="notes">
                     从数学定义角度，定义对抗训练的公式如下
 
@@ -247,7 +251,7 @@
             
 
 
-            <section>
+            <!-- <section>
                 <h3>两个优化方向：<br>得到更优的扰动 & 提升训练速度</h3>
                 <hr>
                 <p style="font-size: 30px;">FreeAT (Free Adversarial Training): NIPS2019</p>
@@ -260,9 +264,9 @@
 
                     FreeLB我看了一下他的论文
                 </aside>
-            </section>
+            </section> -->
 
-            <section data-background-transition="zoom">
+            <!-- <section data-background-transition="zoom">
                 <img src="https://i.loli.net/2021/04/10/y8Lez3XOJlmrIda.png" style="width: 10000px;height: 500px;">
                 <aside class="notes">
                     他在去年的自然语言理解基准榜单上得到了第一名
@@ -278,17 +282,17 @@
                 <aside class="notes">
 
                 </aside>
-            </section>
+            </section> -->
         </section>
 
 
         <section data-background-transition="zoom">
             <section data-background-transition="zoom">
-                <h2>NLP 中的对抗训练</h2>
+                <h2>NLP 中的对抗样本</h2>
             </section>
 
 
-            <section data-background-transition="zoom">
+            <!-- <section data-background-transition="zoom">
                 <h3>NLP的对手</h3>
                 <hr>
                 <p style="font-size: 30px;">1. 黑盒环境下对embedding进行扰动(对手不是从样本进行攻击)</p>
@@ -299,13 +303,15 @@
 
                     读
                 </aside>
-            </section>
+            </section> -->
 
 
             <section data-background-transition="zoom">
+                <h3>NLP中攻击示例</h3>
+                <hr>
                 <img src="https://i.loli.net/2021/04/09/daKoDQkv35hwmEP.png" style="width: 700px;height: 300px;">
-                <p style="font-size: 30px;">如何在没有人工评估的情况下通过单词/字符替换来构建保留标签的对抗性示例仍然不清楚，因为每个单词/字符的含义取决于上下文。</p>
-                <p style="font-size: 30px;">基于Embedding的对手严格来说比更传统的基于文本的对手更强大</p>
+                <p style="font-size: 30px;">近义词攻击、符号攻击、缩写攻击...</p>
+                <p style="font-size: 30px;">离散化 攻击embedding层</p>
                 <aside class="notes">
                     读
 
@@ -314,7 +320,7 @@
             </section>
 
 
-            <section>
+            <!-- <section>
                 <h3>FreeLB Min-Max公式</h3>
                 <hr>
                 <h3 style="font-size: 30px">
@@ -334,27 +340,27 @@
                 <aside class="notes">
 
                 </aside>
-            </section>
+            </section> -->
 
-            <section>
+            <!-- <section>
                 <h3>嵌入训练过程</h3>
                 <hr>
                 <img src="https://i.loli.net/2021/04/10/GLlxoKgC46bPJiF.png" style="width: 1000px;height: 500px;">
-            </section>
+            </section> -->
 
-            <section>
+            <!-- <section>
                 <h3>实验对比</h3>
                 <hr>
                 <img src="https://i.loli.net/2021/04/10/WTh7O4Ui5YenzNM.png" style="width: 700px;height: 300px;">
                 <aside class="notes">
 
                 </aside>
-            </section>
+            </section> -->
 
         </section>
 
 
-        <section data-background-transition="zoom">
+        <!-- <section data-background-transition="zoom">
             <section data-background-transition="zoom">
                 <h2>GNN 中的对抗攻击</h2>
                 <aside class="notes">
@@ -378,29 +384,58 @@
                     针对非欧空间的离散数据，也是相当容易被攻击的毒害的。
                 </aside>
             </section>
-        </section>
+        </section> -->
 
         <section data-background-transition="zoom">
             <section data-background-transition="zoom">
-                <h2>联邦学习</h2>
+                <h2>可迁移性</h2>
                 <hr>
-                <a href="https://www.biendata.xyz/competition/haihua_2021/leaderboard/" target="_blank">海华阅读理解中文挑战赛</a>
-                <img src="https://s2.loli.net/2022/05/13/Xmi7kTxPzJ5oMUN.png" style="width: 700px;height: 300px;">
-            </section>
-            <section data-background-transition="zoom">
-                <img src="https://i.loli.net/2021/04/10/8ujGxwd7L9EDZgO.png" style="width: 700px;height: 300px;">
+                <p style="font-size: 30px;">对抗样本可以在不同网络结构上迁移性</p>
+                <img src="https://s2.loli.net/2022/05/13/n45NscrjOXYpdEM.png" style="width: 700px;height: 300px;">
             </section>
             <aside class="notes">
-
+                可转移性指的是一个对抗样本具有可转移能力，即使是除了用来产生它的模型以外，它仍然有效
             </aside>
         </section>
 
+        <section data-background-transition="zoom">
+            <section data-background-transition="zoom">
+                <h2>对抗样本产生原因讨论</h2>
+                <hr>
+                <p style="font-size: 30px;">神经网络偏好纹理(高频)而不是轮廓(低频)？</p>
+                <img src="https://s2.loli.net/2022/05/13/28Hh5kLrDIXWwjB.png" style="width: 700px;height: 300px;">
+            </section>
+            <aside class="notes">
+                
+            </aside>
+
+            <section data-background-transition="zoom">
+                <h2>对抗样本产生原因讨论</h2>
+                <hr>
+                <p style="font-size: 30px;">对抗训练的神经网络更关注轮廓特征？</p>
+                <img src="https://s2.loli.net/2022/05/13/dmcGujzpHf1oBLy.png" style="width: 700px;height: 400px;">
+            </section>
+            <aside class="notes">
+            </aside>
+
+            <section data-background-transition="zoom">
+                <h2>对抗样本产生原因讨论</h2>
+                <hr>
+                <p style="font-size: 30px;">神经网络和人眼关注的图像特征不同？</p>
+                <img src="https://s2.loli.net/2022/05/13/adu1bRTE9OrzSxm.png" style="width: 700px;height: 300px;">
+            </section>
+            <aside class="notes">
+                图中最左边是一个干净的狗的图片，它包含狗的鲁棒特征和狗的非鲁棒特征。经过对猫这个类进行针对性攻击，得到错误分类的狗的图片，这时生成的对抗图片包含狗的鲁棒特征（人眼看起来是狗） 和猫的非鲁棒特征（网络认为是猫）。然后把生成的对抗图片错误标记为猫这个类，丢入网络进行训练，最后得到的模型在未经过干净的猫的训练情况下，在干净的猫的图片上也有很好的准确度。这个实验证明神经网络识别图片的方式与人眼不同，它们依靠图片上的人眼不易察觉的非鲁棒特征去识别图片。 
+            </aside>
+
+        </section>
+
 
 
         <section data-background-transition="zoom">
-            <h2>Thank you Bye</h2>
-            <a href="https://github.com/Coding-Zuo" target="_blank">Github</a><br>
-            <a href="https://coding-zuo.github.io/" target="_blank">Blog</a>
+            <h2>谢谢</h2>
+            <!-- <a href="https://github.com/Coding-Zuo" target="_blank">Github</a><br>
+            <a href="https://coding-zuo.github.io/" target="_blank">Blog</a> -->
             <aside class="notes">
 
             </aside>
